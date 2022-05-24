@@ -1,0 +1,315 @@
+-- 집합 연산자
+-- 이전 직무 정보
+SELECT * 
+FROM job_history
+ORDER BY employee_id, start_date;
+
+
+SELECT employee_id, job_id
+FROM employees
+ORDER BY employee_id;
+
+
+SELECT employee_id 사번, job_id, start_date 시작일, end_date
+FROM job_history
+UNION ALL 
+SELECT employee_id, job_id, null , null
+FROM employees
+ORDER BY 사번, 시작일;
+
+
+SELECT employee_id 사번, job_id, TO_CHAR(start_date), end_date
+FROM job_history
+UNION ALL 
+SELECT employee_id, job_id, '현재직무', null
+FROM employees
+ORDER BY 사번, 3;
+
+
+SELECT employee_id, job_id
+FROM job_history
+INTERSECT
+SELECT employee_id, job_id
+FROM employees;
+
+
+SELECT employee_id, job_id
+FROM job_history
+INTERSECT
+SELECT employee_id, job_id
+FROM job_history;
+
+
+SELECT department_id
+FROM departments
+MINUS
+SELECT department_id
+FROM employees;
+
+
+ SELECT * 
+FROM departments
+WHERE NOT EXISTS
+(SELECT * FROM employees
+ WHERE department_id = departments.department_id);
+  
+
+ CREATE TABlE product(
+    prod_no VARCHAR2(5),
+    prod_name VARCHAR2(30),
+    prod_price NUMBER(6),
+    prod_info VARCHAR2(100),
+    prod_mfd DATE -- 날짜타입  
+);
+ 
+ DROP TABLE product;
+ 
+ -- 칼럼 추가
+ ALTER TABLE product 
+ ADD prod_feature VARCHAR2(20);
+ 
+ DESC product; -- prod_feature 칼럼 추가 확인
+ 
+ -- 칼럼 이름 변경
+ ALTER TABLE product
+ RENAME COLUMN prod_feature TO prod_host;
+ 
+ DESC product;
+ 
+ -- 칼럼의 자릿수나 자료형을 변경
+ ALTER TABLE product
+ MODIFY prod_host VARCHAR2(6);
+ 
+ DESC PRODUCT;
+ 
+ -- 칼럼 제거
+ ALTER TABLE product
+ DROP COLUMN prod_host;
+ 
+ DESC product;
+ 
+ INSERT INTO product(prod_no, prod_name, prod_price) VALUES ('C0001', '아메리카노', '1400');
+ INSERT INTO product(prod_no, prod_name, prod_price) VALUES ('C0001', 'A', '2000');
+ 
+ SELECT * FROM product;
+ 
+ CREATE TABLE atest (
+    a NUMBER NOT NULL
+ );
+ -- not null 제약조건으로 인해 null 값 삽입 불가능
+ INSERT INTO atest(a) VALUES(null);
+ 
+ CREATE TABLE btest(
+    a NUMBER CONSTRAINT btest_a_UK UNIQUE,
+    b NUMBER
+ );
+ 
+ DESC btest;
+ 
+ INSERT INTO btest(a, b) VALUES(1, 2);
+ INSERT INTO btest(a, b) VALUES(1, 21);
+ INSERT INTO btest(a, b) VALUES(null, 21);
+ INSERT INTO btest(a, b) VALUES(null, 31);
+ 
+ SELECT * FROM btest;
+ 
+ CREATE TABLE ctest (
+    a NUMBER CONSTRAINT ctest_a_PK PRIMARY KEY,
+    b NUMBER
+ );
+ 
+ INSERT INTO ctest(a,b)VALUES(1, 1);
+ INSERT INTO ctest(a,b)VALUES(1, 1); -- pk 중에서의 unique 제약조건에 위배되기 때문이다.
+ INSERT INTO ctest(a,b)VALUES(null, 1); -- pk 중에서의 not null 제약조건에 위배됨
+
+ 
+ CREATE TABLE dtest (
+    a NUMBER CONSTRAINT dtest_a_ck CHECK(MOD(a,2) = 1), 
+    b CHAR(1) CHECK (b IN ('M', 'F')) -- 괄호안에 조건을 설정해줘야 함 
+ );
+ 
+ INSERT INTO dtest(a, b) VALUES (1, 'M');
+ 
+ DESC dtest;
+ 
+ CREATE TABLE parent_tbl (
+    a VARCHAR2(2) primary key,
+    b NUMBER
+ );
+ CREATE TABLE child_tbl (
+    c NUMBER primary key,
+    d VARCHAR2(2) CONSTRAINT childtbl_d_fk REFERENCES parent_tbl(a) NOT NULL
+ );
+ 
+ INSERT INTO parent_tbl(a, b) VALUES ('fi', 1);
+ INSERT INTO parent_tbl(a, b) VALUES ('se', 2);
+ INSERT INTO parent_tbl(a, b) VALUES ('th', 3);
+
+ INSERT INTO child_tbl(c, d) VALUES (10, 'se');
+ INSERT INTO child_tbl(c, d) VALUES (20, 'se');
+ INSERT INTO child_tbl(c, d) VALUES (30, 'fi');
+ INSERT INTO child_tbl(c, d) VALUES (40, 'si'); -- 오류 :참조하고자 하는 부모의 값이 존재하지 않음 - 무결성 제약조건에 위배됨
+ INSERT INTO child_tbl(c, d) VALUES (50, '');
+
+ DROP TABLE child_tbl;
+
+ CREATE TABLE f_tbl ( -- 테이블 레벨의 제약조건 설정 / NOT NULL 제약조건은 반드시 컬럼레벨의 제약조건으로 설정해줘야 함
+    a number,
+    b VARCHAR2(2),
+    c DATE,
+    CONSTRAINT ftbl_a_pk PRIMARY KEY(a),
+    CONSTRAINT ftbl_a_ck CHECK( a >= 0 ),
+    CONSTRAINT ftbl_b_fk FOREIGN KEY(b) REFERENCES parent_tbl(a)
+ );
+ 
+ SELECT * FROM parent_tbl; 
+ SELECT * FROM child_tbl;
+ 
+ DELETE FROM product; -- 테이블의 자료만 모두 삭제함
+ 
+
+ 
+ INSERT INTO product(prod_no, prod_name, prod_price) VALUES ('C0001', '아메리카노', 1000);
+ INSERT INTO product(prod_no, prod_name, prod_price) VALUES ('C0001', '아메리카노', 1000); -- prod_no가 pk값이므로 유니크 제약조건에 위배됨 
+    
+ ALTER TABLE product
+ MODIFY prod_name NOT NULL; -- not null 제약조건은 이렇게 추가 해줘야 함
+ 
+ 
+ 
+ SELECT * FROM user_tables;
+ SELECT * FROM user_constraints;
+  SELECT * FROM user_cons_columns;
+
+ SELECT *
+ FROM user_tables
+ WHERE table_name = 'product';
+
+ ALTER TABLE product
+ DROP CONSTRAINT SYS_C007010;
+ 
+ DESC product;
+ 
+ ALTER TABLE product 
+ MODIFY prod_name NOT NULL;
+ 
+ ALTER TABLE product
+ ADD CONSTRAINT prod_price_ck CHECK(prod_price >= 0);
+ 
+ ALTER TABLE product
+ ADD CONSTRAINT prod_no PRIMARY KEY(prod_no);
+ 
+ CREATE TABLE customer (
+    id VARCHAR2(5) CONSTRAINT id_pk PRIMARY KEY,
+    pwd VARCHAR2(5) CONSTRAINT pwd_nn NOT NULL,
+    name VARCHAR2(30) CONSTRAINT name_nn NOT NULL,
+    address VARCHAR2(30),
+    status NUMBER(1) CONSTRAINT status_ck CHECK (status IN (0, 1))
+ );
+ 
+ CREATE TABLE order_info (
+    order_no NUMBER CONSTRAINT order_no_pk PRIMARY KEY,
+    order_id VARCHAR2(5) CONSTRAINT order_no_nn NOT NULL,
+    order_dt DATE CONSTRAINT order_dt_nn NOT NULL,
+    CONSTRAINT order_id_fk FOREIGN KEY(order_id) REFERENCES customer(id)
+ );
+ 
+ CREATE TABLE order_line (
+    order_no NUMBER,
+    order_prod_no VARCHAR2(5),
+    order_quantity NUMBER(3) CONSTRAINT order_quantity CHECK(order_quantity >= 1),
+    CONSTRAINT order_no_fk FOREIGN KEY(order_no) REFERENCES order_info(order_no),
+    CONSTRAINT order_prod_no_fk FOREIGN KEY(order_prod_no) REFERENCES product(prod_no),
+    CONSTRAINT order_group_no_pk PRIMARY KEY(order_no, order_prod_no)
+ );
+ 
+ SELECT * FROM user_constraints WHERE table_name = 'JOB_HISTORY';
+ DROP TABLE customer; -- 자식 테이블이 참조하고 있기 때문에 제거를 하지 못한다. / 이 경우에는 자식 테이블을 먼저삭제한다.
+ 
+ CREATE VIEW a_view
+ AS SELECT d.department_id, d.department_name, j.job_id, j.job_title, count(employee_id) emp_count
+    FROM employees e JOIN departments d ON (e.department_id = d.department_id) 
+                     JOIN jobs j ON (e.job_id= j.job_id)
+    WHERE salary >= 3000
+    GROUP BY d.department_id, d.department_name, j.job_id, j.job_title
+    HAVING count(employee_id) >= 2
+    ORDER BY count(employee_id);
+ 
+ SELECT * FROM a_view;
+
+-- 뷰내용 변경
+CREATE OR REPLACE VIEW a_view
+AS 
+SELECT employee_id, first_name
+FROM employees;
+ -- 뷰삭제
+ DROP VIEW a_view;
+ 
+SELECT d.department_id, d.department_name, j.job_id, j.job_title, count(employee_id)
+FROM employees e JOIN departments d ON (e.department_id = d.department_id) 
+                 JOIN jobs j ON (e.job_id= j.job_id)
+WHERE salary >= 3000
+GROUP BY d.department_id, d.department_name, j.job_id, j.job_title
+HAVING count(employee_id) >= 2
+ORDER BY count(employee_id);
+ 
+ -- 시퀀스 : 일련번호 값
+ CREATE SEQUENCE a_seq;
+ CREATE SEQUENCE b_seq
+ START WITH 4
+ INCREMENT BY 2
+ MAXVALUE 50
+ CYCLE
+ MINVALUE 3;
+ 
+ SELECT b_seq.NEXTVAL FROM dual;
+ SELECT b_seq.CURRVAL FROM dual;
+ 
+ DESC order_info;
+ 
+ CREATE SEQUENCE order_seq;
+ 
+ INSERT INTO order_line(order_no, order_prod_no, order_quantity) 
+                VALUES (order_seq.CURRVAL, 'C0002', 7);
+ INSERT INTO order_line(order_no, order_prod_no, order_quantity) 
+                VALUES (order_seq.CURRVAL, 'C0001', 1); 
+  
+ SELECT * FROM order_info;
+ SELECT * FROM order_line;
+ DROP SEQUENCE b_seq;
+ 
+ CREATE TABLE account(no CHAR(3) PRIMARY KEY, balance NUMBER(10));
+ 
+ INSERT INTO account(no, balance) VALUES ('101', 1000);
+ INSERT INTO account(no, balance) VALUES ('102', 1000);
+ commit;
+ 
+ 
+ UPDATE account SET balance = balance - 100  WHERE no = '101';
+ UPDATE account SET balance = balance + 100  WHERE no = '102';
+
+ SELECT * FROM account;
+ commit;
+ 
+ UPDATE account SET balance = balance - 100  WHERE no = '101';
+ UPDATE account SET balance = balance + 100  WHERE no = '999';
+
+rollback;
+
+CREATE OR REPLACE PROCEDURE a_proc(num NUMBER)
+IS
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('숫자: ' || num);
+    
+END;
+
+
+
+
+
+
+
+
+
+
+
