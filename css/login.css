@@ -13,6 +13,10 @@
 	padding:10px;
 } 
 
+.login > label {
+	width:60px;
+}
+
 label {
 	height:100%;
 	text-align:center;
